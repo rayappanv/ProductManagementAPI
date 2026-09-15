@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ProductManagementAPI.Data;
+using ProductManagementAPI.DTOs;
 using ProductManagementAPI.Models;
 
 namespace ProductManagement.API.Controllers
@@ -7,86 +10,93 @@ namespace ProductManagement.API.Controllers
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private static readonly List<Product> products =
-       [
-           new Product
-            {
-                Id = 1,
-                Name = "Laptop",
-                Price = 65000,
-                StockQuantity = 10
-            },
-            new Product
-            {
-                Id = 2,
-                Name = "Mouse",
-                Price = 1200,
-                StockQuantity = 25
-            },
-            new Product
-            {
-                Id = 3,
-                Name = "Keyboard",
-                Price = 2500,
-                StockQuantity = 15
-            }
-       ];
+        private readonly AppDbContext _context;
+
+        public ProductsController(AppDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpGet]
-        public IActionResult GetProducts()
+        public async Task<IActionResult> GetProducts()
         {
+
+            var products = await _context.Products.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity
+            }).ToListAsync();
+
             return Ok(products);
         }
         [HttpGet("{id}")]
-        public IActionResult GetProduct(int id)
+        public async Task<IActionResult> GetProduct(int id)
         {
-            var product = products.FirstOrDefault(p => p.Id == id);
-            if (product == null)
+            var product = await _context.Products.FindAsync(id);
+            var productDto = new ProductDto
             {
-                return NotFound($"Product with ID {id} was not found");
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity
+            };
 
-            }
-            return Ok(product);
+            return Ok(productDto);
         }
 
         [HttpPost]
-        public IActionResult CreateProduct(Product product)
+        public async Task<IActionResult> CreateProduct(CreateProductDto createProductDto)
         {
-            product.Id = products.Count == 0 ? 1 : products.Max(p => p.Id) + 1;
+            var product = new Product
+            {
+                Name = createProductDto.Name,
+                Price = createProductDto.Price,
+                StockQuantity = createProductDto.StockQuantity
+            };
 
-            products.Add(product);
-           
-       
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+            var productDto = new ProductDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity
+            };
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateProduct(int id, Product updatedProduct)
+        public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto updateProductDto)
         {
-            var existingProduct = products.FirstOrDefault(p => p.Id == id);
+            var existingProduct = await _context.Products.FindAsync(id);
             if (existingProduct == null)
             {
                 return NotFound($"Product with ID {id} was not found");
             }
 
-            existingProduct.Name = updatedProduct.Name;
-            existingProduct.Price = updatedProduct.Price;
-            existingProduct.StockQuantity = updatedProduct.StockQuantity;
+            existingProduct.Name = updateProductDto.Name;
+            existingProduct.Price = updateProductDto.Price;
+            existingProduct.StockQuantity = updateProductDto.StockQuantity;
 
-            return Ok(existingProduct);
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteProduct(int id)
+        public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = products.FirstOrDefault(p => p.Id == id);
+            var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
                 return NotFound($"Product with ID {id} was not found");
             }
 
-            products.Remove(product);
-            return Ok(product);
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
     }
 }
