@@ -1,4 +1,6 @@
-﻿namespace ProductManagementAPI.Models
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace ProductManagementAPI.Models
 {
     public class Product
     {
@@ -6,6 +8,7 @@
 
         public string Name { get; set; } = string.Empty;
 
+        [Precision(18, 2)]
         public decimal Price { get; set; }
 
         public int StockQuantity { get; set; }
