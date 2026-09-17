@@ -85,5 +85,11 @@ namespace ProductManagement.API.Controllers
 
             return NoContent();
         }
+
+        [HttpGet("test-error")]
+        public IActionResult TestError()
+        {
+            throw new Exception("This is a test exception");
+        }
     }
 }

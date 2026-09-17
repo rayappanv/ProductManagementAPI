@@ -1,5 +1,4 @@
-﻿using ProductManagementAPI.Repositories;
-using ProductManagementAPI.DTOs;
+﻿using ProductManagementAPI.DTOs;
 using ProductManagementAPI.Models;
 using ProductManagementAPI.Repositories;
 
@@ -8,10 +7,12 @@ namespace ProductManagementAPI.Services
     public class ProductService : IProductService
     {
         private readonly IProductRepository _productRepository;
+        private readonly ILogger<ProductService> _logger;
 
-        public ProductService(IProductRepository productRepository)
+        public ProductService(IProductRepository productRepository, ILogger<ProductService> logger)
         {
             _productRepository = productRepository;
+            _logger = logger;
         }
 
         public async Task<List<ProductDto>> GetProductsAsync()
@@ -58,6 +59,7 @@ namespace ProductManagementAPI.Services
             await _productRepository.AddAsync(product);
 
             await _productRepository.SaveChangesAsync();
+            _logger.LogInformation("Product created successfully. ProductId: {ProductId}, Name: {ProductName}", product.Id, product.Name);
 
             return new ProductDto
             {
@@ -76,6 +78,8 @@ namespace ProductManagementAPI.Services
 
             if (product == null)
             {
+                _logger.LogWarning("Product update failed because product was not found. ProductId: {ProductId}", id);
+
                 return false;
             }
 
@@ -94,12 +98,15 @@ namespace ProductManagementAPI.Services
 
             if (product == null)
             {
+                _logger.LogWarning("Product delete failed because product was not found. ProductId: {ProductId}", id);
+
                 return false;
             }
 
             _productRepository.Delete(product);
 
             await _productRepository.SaveChangesAsync();
+            _logger.LogInformation("Product deleted successfully. ProductId: {ProductId}", id);
 
             return true;
         }

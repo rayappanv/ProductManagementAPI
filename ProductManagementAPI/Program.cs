@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ProductManagementAPI.Repositories;
 using ProductManagementAPI.Services;
 using ProductManagementAPI.Data;
+using ProductManagementAPI.Exceptions;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,12 +16,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-
+app.UseExceptionHandler();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
