@@ -1,6 +1,6 @@
 ﻿using ProductManagementAPI.DTOs;
 
-namespace ProductManagement.API.Services
+namespace ProductManagementAPI.Services
 {
     public interface IProductService
     {

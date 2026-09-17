@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using ProductManagement.API.Services;
+using ProductManagementAPI.Repositories;
+using ProductManagementAPI.Services;
 using ProductManagementAPI.Data;
 
 
@@ -12,6 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

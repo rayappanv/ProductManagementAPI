@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ProductManagement.API.Services;
+using ProductManagementAPI.Services;
 using ProductManagementAPI.DTOs;
 
 namespace ProductManagement.API.Controllers

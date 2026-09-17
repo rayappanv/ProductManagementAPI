@@ -1,50 +1,52 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ProductManagementAPI.Data;
+﻿using ProductManagementAPI.Repositories;
 using ProductManagementAPI.DTOs;
 using ProductManagementAPI.Models;
+using ProductManagementAPI.Repositories;
 
-namespace ProductManagement.API.Services
+namespace ProductManagementAPI.Services
 {
     public class ProductService : IProductService
     {
-        private readonly AppDbContext _context;
+        private readonly IProductRepository _productRepository;
 
-        public ProductService(AppDbContext context)
+        public ProductService(IProductRepository productRepository)
         {
-            _context = context;
+            _productRepository = productRepository;
         }
 
         public async Task<List<ProductDto>> GetProductsAsync()
         {
-            return await _context.Products
-                .Select(p => new ProductDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Price = p.Price,
-                    StockQuantity = p.StockQuantity
-                })
-                .ToListAsync();
+            var products = await _productRepository.GetAllAsync();
+
+            return products.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity
+            })
+                .ToList();
         }
 
         public async Task<ProductDto?> GetProductAsync(int id)
         {
-            var product = await _context.Products
-                .Where(p => p.Id == id)
-                .Select(p => new ProductDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Price = p.Price,
-                    StockQuantity = p.StockQuantity
-                })
-                .FirstOrDefaultAsync();
+            var product = await _productRepository.GetByIdAsync(id);
 
-            return product;
+            if (product == null)
+            {
+                return null;
+            }
+
+            return new ProductDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity
+            };
         }
 
-        public async Task<ProductDto> CreateProductAsync(
-            CreateProductDto createProductDto)
+        public async Task<ProductDto> CreateProductAsync(CreateProductDto createProductDto)
         {
             var product = new Product
             {
@@ -53,9 +55,9 @@ namespace ProductManagement.API.Services
                 StockQuantity = createProductDto.StockQuantity
             };
 
-            _context.Products.Add(product);
+            await _productRepository.AddAsync(product);
 
-            await _context.SaveChangesAsync();
+            await _productRepository.SaveChangesAsync();
 
             return new ProductDto
             {
@@ -70,7 +72,7 @@ namespace ProductManagement.API.Services
             int id,
             UpdateProductDto updateProductDto)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _productRepository.GetByIdAsync(id);
 
             if (product == null)
             {
@@ -81,23 +83,23 @@ namespace ProductManagement.API.Services
             product.Price = updateProductDto.Price;
             product.StockQuantity = updateProductDto.StockQuantity;
 
-            await _context.SaveChangesAsync();
+            await _productRepository.SaveChangesAsync();
 
             return true;
         }
 
         public async Task<bool> DeleteProductAsync(int id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _productRepository.GetByIdAsync(id);
 
             if (product == null)
             {
                 return false;
             }
 
-            _context.Products.Remove(product);
+            _productRepository.Delete(product);
 
-            await _context.SaveChangesAsync();
+            await _productRepository.SaveChangesAsync();
 
             return true;
         }
