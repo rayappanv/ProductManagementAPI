@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProductManagementAPI.Data;
 using ProductManagementAPI.Exceptions;
+using ProductManagementAPI.Models;
 using ProductManagementAPI.Repositories;
 using ProductManagementAPI.Services;
 using System.Text;
@@ -22,7 +24,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddOpenApi();
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
@@ -50,8 +52,7 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
 
-            IssuerSigningKey =
-                new SymmetricSecurityKey(key)
+            IssuerSigningKey = new SymmetricSecurityKey(key)
         };
 });
 
